@@ -13,7 +13,7 @@ body {
     padding: 30px;
     border-radius: 15px;
     box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
-    width: 500px;
+    width: 550px;
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.3);
 }
@@ -41,7 +41,7 @@ textarea, input {
     font-size: 16px;
 }
 button {
-    width: 100%;
+    width: 48%;
     padding: 12px;
     background: linear-gradient(90deg, #00ffff, #00ffcc);
     color: #000;
@@ -50,7 +50,7 @@ button {
     font-size: 16px;
     cursor: pointer;
     transition: all 0.3s;
-    margin: 5px 0;
+    margin: 5px 1%;
 }
 button:hover {
     box-shadow: 0 0 15px #00ffff;
