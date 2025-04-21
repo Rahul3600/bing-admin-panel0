@@ -35,7 +35,7 @@
         logDebug('Firebase initialized successfully');
     } catch (error) {
         logDebug(`Firebase init failed: ${error.message}`);
-        showFeedback('phrasesFeedback', 'Firebase setup failed.', true);
+        showFeedback('phrasesFeedback', 'Firebase setup failed. Check configuration.', true);
     }
 
     // Authenticate
@@ -43,16 +43,22 @@
         auth.onAuthStateChanged(user => {
             if (user) {
                 logDebug(`Authenticated as anonymous user: ${user.uid}`);
+                // Retry initial loads after authentication
+                loadClientIds();
+                loadLogs();
             } else {
-                logDebug('Attempting anonymous sign-in...');
+                logDebug('No user authenticated. Attempting anonymous sign-in...');
                 auth.signInAnonymously()
                     .then(() => logDebug('Anonymous sign-in successful'))
                     .catch(error => {
-                        logDebug(`Auth error: ${error.message}`);
-                        showFeedback('phrasesFeedback', `Authentication failed: ${error.message}`, true);
+                        logDebug(`Auth error: ${error.code} - ${error.message}`);
+                        showFeedback('phrasesFeedback', `Authentication failed: ${error.message}. Enable anonymous sign-in in Firebase Console.`, true);
                     });
             }
         });
+    } else {
+        logDebug('Firebase Auth not initialized.');
+        showFeedback('phrasesFeedback', 'Firebase Auth not initialized.', true);
     }
 
     // Validate Client ID
@@ -76,8 +82,8 @@
 
     // Save Search Phrases
     window.saveSearchTerms = function() {
-        if (!database) {
-            showFeedback('searchTermsFeedback', 'Database not initialized.', true);
+        if (!database || !auth.currentUser) {
+            showFeedback('searchTermsFeedback', 'Not authenticated or database not initialized.', true);
             return;
         }
         const termsInput = document.getElementById('searchTerms').value;
@@ -103,8 +109,8 @@
 
     // Clear Search Phrases
     window.clearSearchTerms = function() {
-        if (!database) {
-            showFeedback('searchTermsFeedback', 'Database not initialized.', true);
+        if (!database || !auth.currentUser) {
+            showFeedback('searchTermsFeedback', 'Not authenticated or database not initialized.', true);
             return;
         }
         if (!confirm('Clear all search phrases?')) {
@@ -127,8 +133,8 @@
 
     // Add Client ID
     window.addClientId = function() {
-        if (!database) {
-            showFeedback('clientFeedback', 'Database not initialized.', true);
+        if (!database || !auth.currentUser) {
+            showFeedback('clientFeedback', 'Not authenticated or database not initialized.', true);
             return;
         }
         const clientId = document.getElementById('clientId').value.trim();
@@ -168,8 +174,8 @@
 
     // Toggle Client Status
     window.toggleClientStatus = function() {
-        if (!database) {
-            showFeedback('clientFeedback', 'Database not initialized.', true);
+        if (!database || !auth.currentUser) {
+            showFeedback('clientFeedback', 'Not authenticated or database not initialized.', true);
             return;
         }
         const clientId = document.getElementById('clientId').value.trim();
@@ -208,8 +214,8 @@
 
     // Delete Client
     window.deleteClient = function() {
-        if (!database) {
-            showFeedback('clientFeedback', 'Database not initialized.', true);
+        if (!database || !auth.currentUser) {
+            showFeedback('clientFeedback', 'Not authenticated or database not initialized.', true);
             return;
         }
         const clientId = document.getElementById('clientId').value.trim();
@@ -242,8 +248,8 @@
 
     // Bulk Toggle Clients
     window.bulkToggleClients = function() {
-        if (!database) {
-            showFeedback('clientFeedback', 'Database not initialized.', true);
+        if (!database || !auth.currentUser) {
+            showFeedback('clientFeedback', 'Not authenticated or database not initialized.', true);
             return;
         }
         const selectedClients = Array.from(document.querySelectorAll('input[name="clientSelect"]:checked')).map(input => input.value);
@@ -276,8 +282,8 @@
     };
 
     function loadClientIds() {
-        if (!database) {
-            showFeedback('clientFeedback', 'Database not initialized.', true);
+        if (!database || !auth.currentUser) {
+            showFeedback('clientFeedback', 'Not authenticated or database not initialized.', true);
             return;
         }
         logDebug('Loading clients');
@@ -307,8 +313,8 @@
     };
 
     function loadLogs(filter = '') {
-        if (!database) {
-            showFeedback('logFeedback', 'Database not initialized.', true);
+        if (!database || !auth.currentUser) {
+            showFeedback('logFeedback', 'Not authenticated or database not initialized.', true);
             return;
         }
         logDebug('Loading logs');
@@ -334,8 +340,8 @@
 
     // Export Logs
     window.exportLogs = function() {
-        if (!database) {
-            showFeedback('logFeedback', 'Database not initialized.', true);
+        if (!database || !auth.currentUser) {
+            showFeedback('logFeedback', 'Not authenticated or database not initialized.', true);
             return;
         }
         logDebug('Exporting logs');
@@ -368,8 +374,8 @@
 
     // Load Stats
     window.loadStats = function() {
-        if (!database) {
-            showFeedback('statsFeedback', 'Database not initialized.', true);
+        if (!database || !auth.currentUser) {
+            showFeedback('statsFeedback', 'Not authenticated or database not initialized.', true);
             return;
         }
         logDebug('Loading stats');
@@ -414,7 +420,6 @@
     // Initial Load
     window.addEventListener('load', () => {
         logDebug('Window loaded, initializing');
-        loadClientIds();
-        loadLogs();
+        // Defer loading until authenticated
     });
 })();
