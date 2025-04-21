@@ -1,71 +1,71 @@
 body {
-       font-family: 'Orbitron', sans-serif;
-       background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-       color: #fff;
-       display: flex;
-       justify-content: center;
-       align-items: center;
-       min-height: 100vh;
-       margin: 0;
-   }
-   .container {
-       background: rgba(255, 255, 255, 0.1);
-       padding: 30px;
-       border-radius: 15px;
-       box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
-       width: 500px;
-       backdrop-filter: blur(10px);
-       border: 1px solid rgba(255, 255, 255, 0.3);
-   }
-   h1 {
-       text-align: center;
-       font-size: 28px;
-       text-transform: uppercase;
-       letter-spacing: 2px;
-       color: #00ffff;
-       text-shadow: 0 0 10px #00ffff;
-   }
-   h2 {
-       font-size: 20px;
-       color: #00ffcc;
-       margin-top: 20px;
-   }
-   textarea, input {
-       width: 100%;
-       padding: 10px;
-       margin: 10px 0;
-       border: 1px solid #00ffff;
-       border-radius: 5px;
-       background: rgba(0, 0, 0, 0.5);
-       color: #fff;
-       font-size: 16px;
-   }
-   button {
-       width: 100%;
-       padding: 12px;
-       background: linear-gradient(90deg, #00ffff, #00ffcc);
-       color: #000;
-       border: none;
-       border-radius: 5px;
-       font-size: 16px;
-       cursor: pointer;
-       transition: all 0.3s;
-       margin: 5px 0;
-   }
-   button:hover {
-       box-shadow: 0 0 15px #00ffff;
-       transform: scale(1.05);
-   }
-   ul, #logList {
-       list-style: none;
-       padding: 0;
-       max-height: 150px;
-       overflow-y: auto;
-       background: rgba(0, 0, 0, 0.3);
-       border-radius: 5px;
-       padding: 10px;
-   }
-   li, #logList div {
-       padding: 5px;
-       color: #00ffcc;
-   }
+    font-family: 'Orbitron', sans-serif;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+.container {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+    width: 500px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+h1 {
+    text-align: center;
+    font-size: 28px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #00ffff;
+    text-shadow: 0 0 10px #00ffff;
+}
+h2 {
+    font-size: 20px;
+    color: #00ffcc;
+    margin-top: 20px;
+}
+textarea, input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #00ffff;
+    border-radius: 5px;
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    font-size: 16px;
+}
+button {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(90deg, #00ffff, #00ffcc);
+    color: #000;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin: 5px 0;
+}
+button:hover {
+    box-shadow: 0 0 15px #00ffff;
+    transform: scale(1.05);
+}
+ul, #logList, #debugInfo {
+    list-style: none;
+    padding: 0;
+    max-height: 150px;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 5px;
+    padding: 10px;
+}
+li, #logList div, #debugInfo div {
+    padding: 5px;
+    color: #00ffcc;
+}
