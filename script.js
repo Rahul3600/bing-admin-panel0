@@ -1,4 +1,6 @@
-// Replace this with your Firebase configuration from Step 1
+(function() {
+    'use strict';
+
 const firebaseConfig = {
   apiKey: "AIzaSyA8RrOW-D0Qr49L7AA-Lxoq0e4SB-TrONM",
   authDomain: "bing-search-phase-management.firebaseapp.com",
@@ -53,6 +55,12 @@ const firebaseConfig = {
         alert('Firebase Auth not initialized. Check script.js and Firebase configuration.');
     }
 
+    // Validate Client ID
+    function isValidClientId(clientId) {
+        const regex = /^[a-zA-Z0-9]{3,20}$/;
+        return regex.test(clientId);
+    }
+
     // Save search phrases
     window.saveSearchTerms = function() {
         if (!database) {
@@ -61,21 +69,48 @@ const firebaseConfig = {
             return;
         }
         const termsInput = document.getElementById('searchTerms').value;
-        const terms = termsInput.split('\n').filter(term => term.trim() !== '');
+        let terms = termsInput.split('\n').map(term => term.trim()).filter(term => term);
         if (terms.length === 0) {
             alert('Please enter at least one search phrase.');
             logDebug('No search phrases entered');
             return;
         }
-        logDebug(`Attempting to save ${terms.length} search phrases`);
+        // Remove duplicates
+        terms = [...new Set(terms)];
+        logDebug(`Attempting to save ${terms.length} unique search phrases`);
         database.ref('searchTerms').set(terms)
             .then(() => {
                 logDebug('Search phrases saved successfully');
                 alert('Search phrases saved!');
+                document.getElementById('searchTerms').value = terms.join('\n');
             })
             .catch(error => {
                 logDebug(`Save phrases failed: ${error.code} - ${error.message}`);
                 alert(`Failed to save phrases: ${error.message}`);
+            });
+    };
+
+    // Clear search phrases
+    window.clearSearchTerms = function() {
+        if (!database) {
+            logDebug('Database not initialized. Cannot clear phrases.');
+            alert('Database not initialized. Check Firebase setup.');
+            return;
+        }
+        if (!confirm('Are you sure you want to clear all search phrases?')) {
+            logDebug('Clear phrases cancelled by user');
+            return;
+        }
+        logDebug('Attempting to clear search phrases');
+        database.ref('searchTerms').remove()
+            .then(() => {
+                logDebug('Search phrases cleared successfully');
+                alert('Search phrases cleared!');
+                document.getElementById('searchTerms').value = '';
+            })
+            .catch(error => {
+                logDebug(`Clear phrases failed: ${error.code} - ${error.message}`);
+                alert(`Failed to clear phrases: ${error.message}`);
             });
     };
 
@@ -92,17 +127,33 @@ const firebaseConfig = {
             logDebug('No Client ID entered');
             return;
         }
+        if (!isValidClientId(clientId)) {
+            alert('Client ID must be 3-20 alphanumeric characters.');
+            logDebug('Invalid Client ID format');
+            return;
+        }
         logDebug(`Attempting to add client: ${clientId}`);
-        database.ref('clients/' + clientId).set({
-            enabled: true,
-            lastUsed: new Date().toISOString()
-        }).then(() => {
-            logDebug(`Client ${clientId} added`);
-            document.getElementById('clientId').value = '';
-            loadClientIds();
+        database.ref('clients/' + clientId).once('value', snapshot => {
+            if (snapshot.exists()) {
+                logDebug(`Client ${clientId} already exists`);
+                alert('Client ID already exists.');
+                return;
+            }
+            database.ref('clients/' + clientId).set({
+                enabled: true,
+                lastUsed: new Date().toISOString()
+            }).then(() => {
+                logDebug(`Client ${clientId} added`);
+                alert(`Client ${clientId} added!`);
+                document.getElementById('clientId').value = '';
+                loadClientIds();
+            }).catch(error => {
+                logDebug(`Add client failed: ${error.code} - ${error.message}`);
+                alert(`Failed to add client: ${error.message}`);
+            });
         }).catch(error => {
-            logDebug(`Add client failed: ${error.code} - ${error.message}`);
-            alert(`Failed to add client: ${error.message}`);
+            logDebug(`Check client failed: ${error.code} - ${error.message}`);
+            alert(`Error checking client: ${error.message}`);
         });
     };
 
@@ -117,6 +168,11 @@ const firebaseConfig = {
         if (!clientId) {
             alert('Please enter a Client ID.');
             logDebug('No Client ID entered for toggle');
+            return;
+        }
+        if (!isValidClientId(clientId)) {
+            alert('Client ID must be 3-20 alphanumeric characters.');
+            logDebug('Invalid Client ID format');
             return;
         }
         logDebug(`Attempting to toggle client: ${clientId}`);
@@ -143,7 +199,47 @@ const firebaseConfig = {
         });
     };
 
+    // Delete client
+    window.deleteClient = function() {
+        if (!database) {
+            logDebug('Database not initialized. Cannot delete client.');
+            alert('Database not initialized. Check Firebase setup.');
+            return;
+        }
+        const clientId = document.getElementById('clientId').value.trim();
+        if (!clientId) {
+            alert('Please enter a Client ID.');
+            logDebug('No Client ID entered for deletion');
+            return;
+        }
+        if (!isValidClientId(clientId)) {
+            alert('Client ID must be 3-20 alphanumeric characters.');
+            logDebug('Invalid Client ID format');
+            return;
+        }
+        if (!confirm(`Are you sure you want to delete client ${clientId}?`)) {
+            logDebug('Delete client cancelled by user');
+            return;
+        }
+        logDebug(`Attempting to delete client: ${clientId}`);
+        database.ref('clients/' + clientId).remove()
+            .then(() => {
+                logDebug(`Client ${clientId} deleted`);
+                alert(`Client ${clientId} deleted!`);
+                document.getElementById('clientId').value = '';
+                loadClientIds();
+            })
+            .catch(error => {
+                logDebug(`Delete client failed: ${error.code} - ${error.message}`);
+                alert(`Failed to delete client: ${error.message}`);
+            });
+    };
+
     // Load client IDs
+    window.refreshClients = function() {
+        loadClientIds();
+    };
+
     function loadClientIds() {
         if (!database) {
             logDebug('Database not initialized. Cannot load clients.');
@@ -167,6 +263,10 @@ const firebaseConfig = {
     }
 
     // Load logs
+    window.refreshLogs = function() {
+        loadLogs();
+    };
+
     function loadLogs() {
         if (!database) {
             logDebug('Database not initialized. Cannot load logs.');
@@ -188,6 +288,40 @@ const firebaseConfig = {
             alert(`Failed to load logs: ${error.message}`);
         });
     }
+
+    // Export logs
+    window.exportLogs = function() {
+        if (!database) {
+            logDebug('Database not initialized. Cannot export logs.');
+            alert('Database not initialized. Check Firebase setup.');
+            return;
+        }
+        logDebug('Exporting logs');
+        database.ref('logs').once('value', snapshot => {
+            const logs = [];
+            snapshot.forEach(child => {
+                logs.push(`${child.val().clientId}: ${child.val().term} (${child.val().timestamp})`);
+            });
+            if (logs.length === 0) {
+                logDebug('No logs to export');
+                alert('No logs available to export.');
+                return;
+            }
+            const logText = logs.join('\n');
+            const blob = new Blob([logText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `activity_logs_${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            logDebug('Logs exported successfully');
+            alert('Logs exported as a text file!');
+        }).catch(error => {
+            logDebug(`Export logs failed: ${error.code} - ${error.message}`);
+            alert(`Failed to export logs: ${error.message}`);
+        });
+    };
 
     // Initial load
     window.addEventListener('load', () => {
