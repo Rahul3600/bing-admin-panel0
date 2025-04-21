@@ -1,35 +1,39 @@
 <!DOCTYPE html>
-   <html lang="en">
-   <head>
-       <meta charset="UTF-8">
-       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-       <title>Bing Search Admin Panel</title>
-       <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
-       <link rel="stylesheet" href="styles.css">
-   </head>
-   <body>
-       <div class="container">
-           <h1>Bing Search Control Center</h1>
-           <section>
-               <h2>Manage Search Phrases</h2>
-               <textarea id="searchTerms" placeholder="Enter search phrases, one per line"></textarea>
-               <button onclick="saveSearchTerms()">Save Phrases</button>
-           </section>
-           <section>
-               <h2>Manage Clients</h2>
-               <input type="text" id="clientId" placeholder="Enter Client ID (e.g., user123)">
-               <button onclick="addClientId()">Add Client</button>
-               <button onclick="toggleClientStatus()">Enable/Disable Client</button>
-               <ul id="clientList"></ul>
-           </section>
-           <section>
-               <h2>Activity Logs</h2>
-               <div id="logList"></div>
-           </section>
-       </div>
-       <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-       <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-       <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-       <script src="script.js"></script>
-   </body>
-   </html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bing Search Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Bing Search Control Center</h1>
+        <section>
+            <h2>Manage Search Phrases</h2>
+            <textarea id="searchTerms" placeholder="Enter search phrases, one per line"></textarea>
+            <button onclick="saveSearchTerms()">Save Phrases</button>
+        </section>
+        <section>
+            <h2>Manage Clients</h2>
+            <input type="text" id="clientId" placeholder="Enter Client ID (e.g., user123)">
+            <button onclick="addClientId()">Add Client</button>
+            <button onclick="toggleClientStatus()">Enable/Disable Client</button>
+            <ul id="clientList"></ul>
+        </section>
+        <section>
+            <h2>Activity Logs</h2>
+            <div id="logList"></div>
+        </section>
+        <section>
+            <h2>Debug Info</h2>
+            <div id="debugInfo"></div>
+        </section>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
