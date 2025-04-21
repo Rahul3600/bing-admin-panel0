@@ -1,15 +1,15 @@
 (function() {
     'use strict';
 
-const firebaseConfig = {
-  apiKey: "AIzaSyA8RrOW-D0Qr49L7AA-Lxoq0e4SB-TrONM",
-  authDomain: "bing-search-phase-management.firebaseapp.com",
-  databaseURL: "https://bing-search-phase-management-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "bing-search-phase-management",
-  storageBucket: "bing-search-phase-management.firebasestorage.app",
-  messagingSenderId: "656271743530",
-  appId: "1:656271743530:web:30794c722708107d178153"
-};
+    const firebaseConfig = {
+        apiKey: "AIzaSyA8RrOW-D0Qr49L7AA-Lxoq0e4SB-TrONM",
+        authDomain: "bing-search-phase-management.firebaseapp.com",
+        databaseURL: "https://bing-search-phase-management-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "bing-search-phase-management",
+        storageBucket: "bing-search-phase-management.firebasestorage.app",
+        messagingSenderId: "656271743530",
+        appId: "1:656271743530:web:30794c722708107d178153"
+    };
 
     // Debug Logging
     let debugMessages = [];
@@ -27,12 +27,12 @@ const firebaseConfig = {
     let auth;
     try {
         firebase.initializeApp(firebaseConfig);
-        logDebug('Firebase initialized successfully');
         database = firebase.database();
         auth = firebase.auth();
+        logDebug('Firebase initialized successfully');
     } catch (error) {
         logDebug(`Firebase init failed: ${error.message}`);
-        alert('Firebase setup failed. Check configuration in script.js.');
+        alert('Firebase setup failed. Check configuration.');
     }
 
     // Authenticate
@@ -46,13 +46,13 @@ const firebaseConfig = {
                     .then(() => logDebug('Anonymous sign-in successful'))
                     .catch(error => {
                         logDebug(`Auth error: ${error.code} - ${error.message}`);
-                        alert(`Authentication failed: ${error.message}. Check Firebase Authentication settings.`);
+                        alert(`Authentication failed: ${error.message}`);
                     });
             }
         });
     } else {
-        logDebug('Firebase Auth not initialized. Check Firebase setup.');
-        alert('Firebase Auth not initialized. Check script.js and Firebase configuration.');
+        logDebug('Firebase Auth not initialized.');
+        alert('Firebase Auth not initialized.');
     }
 
     // Validate Client ID
@@ -64,28 +64,27 @@ const firebaseConfig = {
     // Save search phrases
     window.saveSearchTerms = function() {
         if (!database) {
-            logDebug('Database not initialized. Cannot save phrases.');
-            alert('Database not initialized. Check Firebase setup.');
+            logDebug('Database not initialized.');
+            alert('Database not initialized.');
             return;
         }
         const termsInput = document.getElementById('searchTerms').value;
         let terms = termsInput.split('\n').map(term => term.trim()).filter(term => term);
         if (terms.length === 0) {
-            alert('Please enter at least one search phrase.');
             logDebug('No search phrases entered');
+            alert('Please enter at least one search phrase.');
             return;
         }
-        // Remove duplicates
-        terms = [...new Set(terms)];
-        logDebug(`Attempting to save ${terms.length} unique search phrases`);
+        terms = [...new Set(terms)]; // Remove duplicates
+        logDebug(`Saving ${terms.length} unique search phrases`);
         database.ref('searchTerms').set(terms)
             .then(() => {
-                logDebug('Search phrases saved successfully');
+                logDebug('Search phrases saved');
                 alert('Search phrases saved!');
                 document.getElementById('searchTerms').value = terms.join('\n');
             })
             .catch(error => {
-                logDebug(`Save phrases failed: ${error.code} - ${error.message}`);
+                logDebug(`Save phrases failed: ${error.message}`);
                 alert(`Failed to save phrases: ${error.message}`);
             });
     };
@@ -93,23 +92,23 @@ const firebaseConfig = {
     // Clear search phrases
     window.clearSearchTerms = function() {
         if (!database) {
-            logDebug('Database not initialized. Cannot clear phrases.');
-            alert('Database not initialized. Check Firebase setup.');
+            logDebug('Database not initialized.');
+            alert('Database not initialized.');
             return;
         }
-        if (!confirm('Are you sure you want to clear all search phrases?')) {
-            logDebug('Clear phrases cancelled by user');
+        if (!confirm('Clear all search phrases?')) {
+            logDebug('Clear phrases cancelled');
             return;
         }
-        logDebug('Attempting to clear search phrases');
+        logDebug('Clearing search phrases');
         database.ref('searchTerms').remove()
             .then(() => {
-                logDebug('Search phrases cleared successfully');
+                logDebug('Search phrases cleared');
                 alert('Search phrases cleared!');
                 document.getElementById('searchTerms').value = '';
             })
             .catch(error => {
-                logDebug(`Clear phrases failed: ${error.code} - ${error.message}`);
+                logDebug(`Clear phrases failed: ${error.message}`);
                 alert(`Failed to clear phrases: ${error.message}`);
             });
     };
@@ -117,22 +116,22 @@ const firebaseConfig = {
     // Add client ID
     window.addClientId = function() {
         if (!database) {
-            logDebug('Database not initialized. Cannot add client.');
-            alert('Database not initialized. Check Firebase setup.');
+            logDebug('Database not initialized.');
+            alert('Database not initialized.');
             return;
         }
         const clientId = document.getElementById('clientId').value.trim();
         if (!clientId) {
-            alert('Please enter a Client ID.');
             logDebug('No Client ID entered');
+            alert('Please enter a Client ID.');
             return;
         }
         if (!isValidClientId(clientId)) {
-            alert('Client ID must be 3-20 alphanumeric characters.');
             logDebug('Invalid Client ID format');
+            alert('Client ID must be 3-20 alphanumeric characters.');
             return;
         }
-        logDebug(`Attempting to add client: ${clientId}`);
+        logDebug(`Checking client: ${clientId}`);
         database.ref('clients/' + clientId).once('value', snapshot => {
             if (snapshot.exists()) {
                 logDebug(`Client ${clientId} already exists`);
@@ -148,11 +147,11 @@ const firebaseConfig = {
                 document.getElementById('clientId').value = '';
                 loadClientIds();
             }).catch(error => {
-                logDebug(`Add client failed: ${error.code} - ${error.message}`);
+                logDebug(`Add client failed: ${error.message}`);
                 alert(`Failed to add client: ${error.message}`);
             });
         }).catch(error => {
-            logDebug(`Check client failed: ${error.code} - ${error.message}`);
+            logDebug(`Check client failed: ${error.message}`);
             alert(`Error checking client: ${error.message}`);
         });
     };
@@ -160,22 +159,22 @@ const firebaseConfig = {
     // Toggle client status
     window.toggleClientStatus = function() {
         if (!database) {
-            logDebug('Database not initialized. Cannot toggle client.');
-            alert('Database not initialized. Check Firebase setup.');
+            logDebug('Database not initialized.');
+            alert('Database not initialized.');
             return;
         }
         const clientId = document.getElementById('clientId').value.trim();
         if (!clientId) {
+            logDebug('No Client ID entered');
             alert('Please enter a Client ID.');
-            logDebug('No Client ID entered for toggle');
             return;
         }
         if (!isValidClientId(clientId)) {
-            alert('Client ID must be 3-20 alphanumeric characters.');
             logDebug('Invalid Client ID format');
+            alert('Client ID must be 3-20 alphanumeric characters.');
             return;
         }
-        logDebug(`Attempting to toggle client: ${clientId}`);
+        logDebug(`Toggling client: ${clientId}`);
         database.ref('clients/' + clientId).once('value', snapshot => {
             const data = snapshot.val();
             if (data) {
@@ -186,7 +185,7 @@ const firebaseConfig = {
                     alert(`Client ${clientId} is now ${data.enabled ? 'disabled' : 'enabled'}`);
                     loadClientIds();
                 }).catch(error => {
-                    logDebug(`Toggle client failed: ${error.code} - ${error.message}`);
+                    logDebug(`Toggle client failed: ${error.message}`);
                     alert(`Failed to toggle client: ${error.message}`);
                 });
             } else {
@@ -194,7 +193,7 @@ const firebaseConfig = {
                 alert('Client ID not found.');
             }
         }).catch(error => {
-            logDebug(`Fetch client failed: ${error.code} - ${error.message}`);
+            logDebug(`Fetch client failed: ${error.message}`);
             alert(`Error fetching client: ${error.message}`);
         });
     };
@@ -202,26 +201,26 @@ const firebaseConfig = {
     // Delete client
     window.deleteClient = function() {
         if (!database) {
-            logDebug('Database not initialized. Cannot delete client.');
-            alert('Database not initialized. Check Firebase setup.');
+            logDebug('Database not initialized.');
+            alert('Database not initialized.');
             return;
         }
         const clientId = document.getElementById('clientId').value.trim();
         if (!clientId) {
+            logDebug('No Client ID entered');
             alert('Please enter a Client ID.');
-            logDebug('No Client ID entered for deletion');
             return;
         }
         if (!isValidClientId(clientId)) {
-            alert('Client ID must be 3-20 alphanumeric characters.');
             logDebug('Invalid Client ID format');
+            alert('Client ID must be 3-20 alphanumeric characters.');
             return;
         }
-        if (!confirm(`Are you sure you want to delete client ${clientId}?`)) {
-            logDebug('Delete client cancelled by user');
+        if (!confirm(`Delete client ${clientId}?`)) {
+            logDebug('Delete client cancelled');
             return;
         }
-        logDebug(`Attempting to delete client: ${clientId}`);
+        logDebug(`Deleting client: ${clientId}`);
         database.ref('clients/' + clientId).remove()
             .then(() => {
                 logDebug(`Client ${clientId} deleted`);
@@ -230,7 +229,7 @@ const firebaseConfig = {
                 loadClientIds();
             })
             .catch(error => {
-                logDebug(`Delete client failed: ${error.code} - ${error.message}`);
+                logDebug(`Delete client failed: ${error.message}`);
                 alert(`Failed to delete client: ${error.message}`);
             });
     };
@@ -242,8 +241,8 @@ const firebaseConfig = {
 
     function loadClientIds() {
         if (!database) {
-            logDebug('Database not initialized. Cannot load clients.');
-            alert('Database not initialized. Check Firebase setup.');
+            logDebug('Database not initialized.');
+            alert('Database not initialized.');
             return;
         }
         logDebug('Loading client list');
@@ -257,7 +256,7 @@ const firebaseConfig = {
             });
             logDebug('Client list loaded');
         }).catch(error => {
-            logDebug(`Load clients failed: ${error.code} - ${error.message}`);
+            logDebug(`Load clients failed: ${error.message}`);
             alert(`Failed to load clients: ${error.message}`);
         });
     }
@@ -269,8 +268,8 @@ const firebaseConfig = {
 
     function loadLogs() {
         if (!database) {
-            logDebug('Database not initialized. Cannot load logs.');
-            alert('Database not initialized. Check Firebase setup.');
+            logDebug('Database not initialized.');
+            alert('Database not initialized.');
             return;
         }
         logDebug('Loading logs');
@@ -284,7 +283,7 @@ const firebaseConfig = {
             });
             logDebug('Logs loaded');
         }).catch(error => {
-            logDebug(`Load logs failed: ${error.code} - ${error.message}`);
+            logDebug(`Load logs failed: ${error.message}`);
             alert(`Failed to load logs: ${error.message}`);
         });
     }
@@ -292,8 +291,8 @@ const firebaseConfig = {
     // Export logs
     window.exportLogs = function() {
         if (!database) {
-            logDebug('Database not initialized. Cannot export logs.');
-            alert('Database not initialized. Check Firebase setup.');
+            logDebug('Database not initialized.');
+            alert('Database not initialized.');
             return;
         }
         logDebug('Exporting logs');
@@ -304,7 +303,7 @@ const firebaseConfig = {
             });
             if (logs.length === 0) {
                 logDebug('No logs to export');
-                alert('No logs available to export.');
+                alert('No logs available.');
                 return;
             }
             const logText = logs.join('\n');
@@ -312,20 +311,20 @@ const firebaseConfig = {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `activity_logs_${new Date().toISOString().split('T')[0]}.txt`;
+            a.download = `logs_${new Date().toISOString().split('T')[0]}.txt`;
             a.click();
             URL.revokeObjectURL(url);
-            logDebug('Logs exported successfully');
-            alert('Logs exported as a text file!');
+            logDebug('Logs exported');
+            alert('Logs exported!');
         }).catch(error => {
-            logDebug(`Export logs failed: ${error.code} - ${error.message}`);
+            logDebug(`Export logs failed: ${error.message}`);
             alert(`Failed to export logs: ${error.message}`);
         });
     };
 
     // Initial load
     window.addEventListener('load', () => {
-        logDebug('Window loaded, initializing client and log lists');
+        logDebug('Window loaded, initializing');
         loadClientIds();
         loadLogs();
     });
