@@ -14,20 +14,25 @@
             <h2>Manage Search Phrases</h2>
             <textarea id="searchTerms" placeholder="Enter search phrases, one per line"></textarea>
             <button onclick="saveSearchTerms()">Save Phrases</button>
+            <button onclick="clearSearchTerms()">Clear Phrases</button>
         </section>
         <section>
             <h2>Manage Clients</h2>
             <input type="text" id="clientId" placeholder="Enter Client ID (e.g., user123)">
             <button onclick="addClientId()">Add Client</button>
             <button onclick="toggleClientStatus()">Enable/Disable Client</button>
+            <button onclick="deleteClient()">Delete Client</button>
             <ul id="clientList"></ul>
         </section>
         <section>
             <h2>Activity Logs</h2>
+            <button onclick="refreshLogs()">Refresh Logs</button>
+            <button onclick="exportLogs()">Export Logs</button>
             <div id="logList"></div>
         </section>
         <section>
             <h2>Debug Info</h2>
+            <button onclick="refreshClients()">Refresh Clients</button>
             <div id="debugInfo"></div>
         </section>
     </div>
