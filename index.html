@@ -4,38 +4,80 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bing Search Admin Panel</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="container">
-        <h1>Bing Search Control Center</h1>
-        <section>
-            <h2>Manage Search Phrases</h2>
-            <textarea id="searchTerms" placeholder="Enter search phrases, one per line"></textarea>
-            <button onclick="saveSearchTerms()">Save Phrases</button>
-            <button onclick="clearSearchTerms()">Clear Phrases</button>
+<body class="bg-gray-900 text-white font-sans">
+    <div class="container mx-auto p-6 max-w-3xl">
+        <h1 class="text-3xl font-bold text-center text-cyan-400 mb-8">Bing Search Control Center</h1>
+
+        <!-- Search Phrases Section -->
+        <section class="mb-6 bg-gray-800 rounded-lg p-4">
+            <h2 class="text-xl font-semibold text-cyan-300 cursor-pointer flex items-center" onclick="toggleSection('phrases')">
+                <span>Manage Search Phrases</span>
+                <svg id="phrases-icon" class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </h2>
+            <div id="phrases-content" class="mt-4">
+                <textarea id="searchTerms" class="w-full p-3 bg-gray-700 border border-cyan-500 rounded text-white" rows="5" placeholder="Enter search phrases, one per line"></textarea>
+                <div class="mt-3 flex space-x-3">
+                    <button onclick="saveSearchTerms()" class="flex-1 bg-cyan-500 hover:bg-cyan-600 text-black py-2 rounded transition" title="Save phrases to Firebase">Save Phrases</button>
+                    <button onclick="clearSearchTerms()" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 rounded transition" title="Clear all phrases">Clear Phrases</button>
+                </div>
+                <p id="searchTermsFeedback" class="mt-2 text-sm"></p>
+            </div>
         </section>
-        <section>
-            <h2>Manage Clients</h2>
-            <input type="text" id="clientId" placeholder="Enter Client ID (e.g., user123)">
-            <button onclick="addClientId()">Add Client</button>
-            <button onclick="toggleClientStatus()">Enable/Disable Client</button>
-            <button onclick="deleteClient()">Delete Client</button>
-            <ul id="clientList"></ul>
+
+        <!-- Clients Section -->
+        <section class="mb-6 bg-gray-800 rounded-lg p-4">
+            <h2 class="text-xl font-semibold text-cyan-300 cursor-pointer flex items-center" onclick="toggleSection('clients')">
+                <span>Manage Clients</span>
+                <svg id="clients-icon" class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </h2>
+            <div id="clients-content" class="mt-4">
+                <input type="text" id="clientId" class="w-full p-3 bg-gray-700 border border-cyan-500 rounded text-white" placeholder="Enter Client ID (e.g., user123)">
+                <div class="mt-3 flex space-x-3">
+                    <button onclick="addClientId()" class="flex-1 bg-cyan-500 hover:bg-cyan-600 text-black py-2 rounded transition" title="Add a new client">Add Client</button>
+                    <button onclick="toggleClientStatus()" class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black py-2 rounded transition" title="Toggle client status">Enable/Disable</button>
+                    <button onclick="deleteClient()" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 rounded transition" title="Delete client">Delete Client</button>
+                </div>
+                <div class="mt-3">
+                    <button onclick="bulkToggleClients()" class="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 rounded transition" title="Toggle selected clients">Bulk Enable/Disable</button>
+                </div>
+                <ul id="clientList" class="mt-3 max-h-40 overflow-y-auto bg-gray-700 p-3 rounded"></ul>
+                <p id="clientFeedback" class="mt-2 text-sm"></p>
+            </div>
         </section>
-        <section>
-            <h2>Activity Logs</h2>
-            <button onclick="refreshLogs()">Refresh Logs</button>
-            <button onclick="exportLogs()">Export Logs</button>
-            <div id="logList"></div>
+
+        <!-- Activity Logs Section -->
+        <section class="mb-6 bg-gray-800 rounded-lg p-4">
+            <h2 class="text-xl font-semibold text-cyan-300 cursor-pointer flex items-center" onclick="toggleSection('logs')">
+                <span>Activity Logs</span>
+                <svg id="logs-icon" class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </h2>
+            <div id="logs-content" class="mt-4">
+                <input type="text" id="logSearch" class="w-full p-3 bg-gray-700 border border-cyan-500 rounded text-white" placeholder="Search logs by Client ID or term">
+                <div class="mt-3 flex space-x-3">
+                    <button onclick="refreshLogs()" class="flex-1 bg-cyan-500 hover:bg-cyan-600 text-black py-2 rounded transition" title="Refresh logs">Refresh Logs</button>
+                    <button onclick="exportLogs()" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 rounded transition" title="Export logs as text">Export Logs</button>
+                </div>
+                <div id="logList" class="mt-3 max-h-40 overflow-y-auto bg-gray-700 p-3 rounded"></div>
+                <p id="logFeedback" class="mt-2 text-sm"></p>
+            </div>
         </section>
-        <section>
-            <h2>Debug Info</h2>
-            <button onclick="refreshClients()">Refresh Clients</button>
-            <div id="debugInfo"></div>
+
+        <!-- Statistics Section -->
+        <section class="mb-6 bg-gray-800 rounded-lg p-4">
+            <h2 class="text-xl font-semibold text-cyan-300 cursor-pointer flex items-center" onclick="toggleSection('stats')">
+                <span>Statistics</span>
+                <svg id="stats-icon" class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </h2>
+            <div id="stats-content" class="mt-4">
+                <button onclick="loadStats()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-black py-2 rounded transition" title="Load phrase usage stats">Load Stats</button>
+                <div id="statsList" class="mt-3 bg-gray-700 p-3 rounded"></div>
+                <p id="statsFeedback" class="mt-2 text-sm"></p>
+            </div>
         </section>
     </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
