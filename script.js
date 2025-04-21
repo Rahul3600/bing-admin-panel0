@@ -15,11 +15,14 @@
     let debugMessages = [];
     function logDebug(message) {
         debugMessages.push(`${new Date().toISOString()}: ${message}`);
-        const debugInfo = document.getElementById('debugInfo');
-        if (debugInfo) {
-            debugInfo.innerHTML = debugMessages.map(msg => `<div>${msg}</div>`).join('');
-        }
         console.log(`[AdminPanel] ${message}`);
+    }
+
+    // Show Feedback
+    function showFeedback(elementId, message, isError = false) {
+        const element = document.getElementById(elementId);
+        element.textContent = message;
+        element.className = `mt-2 text-sm ${isError ? 'text-red-400' : 'text-green-400'}`;
     }
 
     // Initialize Firebase
@@ -32,7 +35,7 @@
         logDebug('Firebase initialized successfully');
     } catch (error) {
         logDebug(`Firebase init failed: ${error.message}`);
-        alert('Firebase setup failed. Check configuration.');
+        showFeedback('phrasesFeedback', 'Firebase setup failed.', true);
     }
 
     // Authenticate
@@ -41,18 +44,15 @@
             if (user) {
                 logDebug(`Authenticated as anonymous user: ${user.uid}`);
             } else {
-                logDebug('No user authenticated. Attempting anonymous sign-in...');
+                logDebug('Attempting anonymous sign-in...');
                 auth.signInAnonymously()
                     .then(() => logDebug('Anonymous sign-in successful'))
                     .catch(error => {
-                        logDebug(`Auth error: ${error.code} - ${error.message}`);
-                        alert(`Authentication failed: ${error.message}`);
+                        logDebug(`Auth error: ${error.message}`);
+                        showFeedback('phrasesFeedback', `Authentication failed: ${error.message}`, true);
                     });
             }
         });
-    } else {
-        logDebug('Firebase Auth not initialized.');
-        alert('Firebase Auth not initialized.');
     }
 
     // Validate Client ID
@@ -61,81 +61,91 @@
         return regex.test(clientId);
     }
 
-    // Save search phrases
+    // Toggle Section Visibility
+    window.toggleSection = function(section) {
+        const content = document.getElementById(`${section}-content`);
+        const icon = document.getElementById(`${section}-icon`);
+        if (content.classList.contains('hidden')) {
+            content.classList.remove('hidden');
+            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>';
+        } else {
+            content.classList.add('hidden');
+            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>';
+        }
+    };
+
+    // Save Search Phrases
     window.saveSearchTerms = function() {
         if (!database) {
-            logDebug('Database not initialized.');
-            alert('Database not initialized.');
+            showFeedback('searchTermsFeedback', 'Database not initialized.', true);
             return;
         }
         const termsInput = document.getElementById('searchTerms').value;
         let terms = termsInput.split('\n').map(term => term.trim()).filter(term => term);
         if (terms.length === 0) {
-            logDebug('No search phrases entered');
-            alert('Please enter at least one search phrase.');
+            showFeedback('searchTermsFeedback', 'Enter at least one phrase.', true);
             return;
         }
         terms = [...new Set(terms)]; // Remove duplicates
-        logDebug(`Saving ${terms.length} unique search phrases`);
+        logDebug(`Saving ${terms.length} phrases`);
+        showFeedback('searchTermsFeedback', 'Saving...');
         database.ref('searchTerms').set(terms)
             .then(() => {
-                logDebug('Search phrases saved');
-                alert('Search phrases saved!');
+                logDebug('Phrases saved');
+                showFeedback('searchTermsFeedback', 'Phrases saved!');
                 document.getElementById('searchTerms').value = terms.join('\n');
             })
             .catch(error => {
-                logDebug(`Save phrases failed: ${error.message}`);
-                alert(`Failed to save phrases: ${error.message}`);
+                logDebug(`Save failed: ${error.message}`);
+                showFeedback('searchTermsFeedback', `Failed: ${error.message}`, true);
             });
     };
 
-    // Clear search phrases
+    // Clear Search Phrases
     window.clearSearchTerms = function() {
         if (!database) {
-            logDebug('Database not initialized.');
-            alert('Database not initialized.');
+            showFeedback('searchTermsFeedback', 'Database not initialized.', true);
             return;
         }
         if (!confirm('Clear all search phrases?')) {
-            logDebug('Clear phrases cancelled');
+            logDebug('Clear cancelled');
             return;
         }
-        logDebug('Clearing search phrases');
+        logDebug('Clearing phrases');
+        showFeedback('searchTermsFeedback', 'Clearing...');
         database.ref('searchTerms').remove()
             .then(() => {
-                logDebug('Search phrases cleared');
-                alert('Search phrases cleared!');
+                logDebug('Phrases cleared');
+                showFeedback('searchTermsFeedback', 'Phrases cleared!');
                 document.getElementById('searchTerms').value = '';
             })
             .catch(error => {
-                logDebug(`Clear phrases failed: ${error.message}`);
-                alert(`Failed to clear phrases: ${error.message}`);
+                logDebug(`Clear failed: ${error.message}`);
+                showFeedback('searchTermsFeedback', `Failed: ${error.message}`, true);
             });
     };
 
-    // Add client ID
+    // Add Client ID
     window.addClientId = function() {
         if (!database) {
-            logDebug('Database not initialized.');
-            alert('Database not initialized.');
+            showFeedback('clientFeedback', 'Database not initialized.', true);
             return;
         }
         const clientId = document.getElementById('clientId').value.trim();
         if (!clientId) {
-            logDebug('No Client ID entered');
-            alert('Please enter a Client ID.');
+            showFeedback('clientFeedback', 'Enter a Client ID.', true);
             return;
         }
         if (!isValidClientId(clientId)) {
-            logDebug('Invalid Client ID format');
-            alert('Client ID must be 3-20 alphanumeric characters.');
+            showFeedback('clientFeedback', 'ID must be 3-20 alphanumeric characters.', true);
             return;
         }
         logDebug(`Checking client: ${clientId}`);
+        showFeedback('clientFeedback', 'Checking...');
         database.ref('clients/' + clientId).once('value', snapshot => {
             if (snapshot.exists()) {
-                logDebug(`Client ${clientId} already exists`);
-                alert('Client ID already exists.');
+                logDebug(`Client ${clientId} exists`);
+                showFeedback('clientFeedback', 'Client ID already exists.', true);
                 return;
             }
             database.ref('clients/' + clientId).set({
@@ -143,38 +153,36 @@
                 lastUsed: new Date().toISOString()
             }).then(() => {
                 logDebug(`Client ${clientId} added`);
-                alert(`Client ${clientId} added!`);
+                showFeedback('clientFeedback', `Client ${clientId} added!`);
                 document.getElementById('clientId').value = '';
                 loadClientIds();
             }).catch(error => {
-                logDebug(`Add client failed: ${error.message}`);
-                alert(`Failed to add client: ${error.message}`);
+                logDebug(`Add failed: ${error.message}`);
+                showFeedback('clientFeedback', `Failed: ${error.message}`, true);
             });
         }).catch(error => {
-            logDebug(`Check client failed: ${error.message}`);
-            alert(`Error checking client: ${error.message}`);
+            logDebug(`Check failed: ${error.message}`);
+            showFeedback('clientFeedback', `Error: ${error.message}`, true);
         });
     };
 
-    // Toggle client status
+    // Toggle Client Status
     window.toggleClientStatus = function() {
         if (!database) {
-            logDebug('Database not initialized.');
-            alert('Database not initialized.');
+            showFeedback('clientFeedback', 'Database not initialized.', true);
             return;
         }
         const clientId = document.getElementById('clientId').value.trim();
         if (!clientId) {
-            logDebug('No Client ID entered');
-            alert('Please enter a Client ID.');
+            showFeedback('clientFeedback', 'Enter a Client ID.', true);
             return;
         }
         if (!isValidClientId(clientId)) {
-            logDebug('Invalid Client ID format');
-            alert('Client ID must be 3-20 alphanumeric characters.');
+            showFeedback('clientFeedback', 'ID must be 3-20 alphanumeric characters.', true);
             return;
         }
         logDebug(`Toggling client: ${clientId}`);
+        showFeedback('clientFeedback', 'Toggling...');
         database.ref('clients/' + clientId).once('value', snapshot => {
             const data = snapshot.val();
             if (data) {
@@ -182,120 +190,156 @@
                     enabled: !data.enabled
                 }).then(() => {
                     logDebug(`Client ${clientId} ${data.enabled ? 'disabled' : 'enabled'}`);
-                    alert(`Client ${clientId} is now ${data.enabled ? 'disabled' : 'enabled'}`);
+                    showFeedback('clientFeedback', `Client ${clientId} ${data.enabled ? 'disabled' : 'enabled'}`);
                     loadClientIds();
                 }).catch(error => {
-                    logDebug(`Toggle client failed: ${error.message}`);
-                    alert(`Failed to toggle client: ${error.message}`);
+                    logDebug(`Toggle failed: ${error.message}`);
+                    showFeedback('clientFeedback', `Failed: ${error.message}`, true);
                 });
             } else {
                 logDebug(`Client ${clientId} not found`);
-                alert('Client ID not found.');
+                showFeedback('clientFeedback', 'Client not found.', true);
             }
         }).catch(error => {
-            logDebug(`Fetch client failed: ${error.message}`);
-            alert(`Error fetching client: ${error.message}`);
+            logDebug(`Fetch failed: ${error.message}`);
+            showFeedback('clientFeedback', `Error: ${error.message}`, true);
         });
     };
 
-    // Delete client
+    // Delete Client
     window.deleteClient = function() {
         if (!database) {
-            logDebug('Database not initialized.');
-            alert('Database not initialized.');
+            showFeedback('clientFeedback', 'Database not initialized.', true);
             return;
         }
         const clientId = document.getElementById('clientId').value.trim();
         if (!clientId) {
-            logDebug('No Client ID entered');
-            alert('Please enter a Client ID.');
+            showFeedback('clientFeedback', 'Enter a Client ID.', true);
             return;
         }
         if (!isValidClientId(clientId)) {
-            logDebug('Invalid Client ID format');
-            alert('Client ID must be 3-20 alphanumeric characters.');
+            showFeedback('clientFeedback', 'ID must be 3-20 alphanumeric characters.', true);
             return;
         }
         if (!confirm(`Delete client ${clientId}?`)) {
-            logDebug('Delete client cancelled');
+            logDebug('Delete cancelled');
             return;
         }
         logDebug(`Deleting client: ${clientId}`);
+        showFeedback('clientFeedback', 'Deleting...');
         database.ref('clients/' + clientId).remove()
             .then(() => {
                 logDebug(`Client ${clientId} deleted`);
-                alert(`Client ${clientId} deleted!`);
+                showFeedback('clientFeedback', `Client ${clientId} deleted!`);
                 document.getElementById('clientId').value = '';
                 loadClientIds();
             })
             .catch(error => {
-                logDebug(`Delete client failed: ${error.message}`);
-                alert(`Failed to delete client: ${error.message}`);
+                logDebug(`Delete failed: ${error.message}`);
+                showFeedback('clientFeedback', `Failed: ${error.message}`, true);
             });
     };
 
-    // Load client IDs
+    // Bulk Toggle Clients
+    window.bulkToggleClients = function() {
+        if (!database) {
+            showFeedback('clientFeedback', 'Database not initialized.', true);
+            return;
+        }
+        const selectedClients = Array.from(document.querySelectorAll('input[name="clientSelect"]:checked')).map(input => input.value);
+        if (selectedClients.length === 0) {
+            showFeedback('clientFeedback', 'Select at least one client.', true);
+            return;
+        }
+        logDebug(`Toggling ${selectedClients.length} clients`);
+        showFeedback('clientFeedback', 'Toggling...');
+        Promise.all(selectedClients.map(clientId => 
+            database.ref('clients/' + clientId).once('value').then(snapshot => {
+                const data = snapshot.val();
+                if (data) {
+                    return database.ref('clients/' + clientId).update({ enabled: !data.enabled });
+                }
+            })
+        )).then(() => {
+            logDebug('Bulk toggle complete');
+            showFeedback('clientFeedback', 'Clients toggled!');
+            loadClientIds();
+        }).catch(error => {
+            logDebug(`Bulk toggle failed: ${error.message}`);
+            showFeedback('clientFeedback', `Failed: ${error.message}`, true);
+        });
+    };
+
+    // Load Client IDs
     window.refreshClients = function() {
         loadClientIds();
     };
 
     function loadClientIds() {
         if (!database) {
-            logDebug('Database not initialized.');
-            alert('Database not initialized.');
+            showFeedback('clientFeedback', 'Database not initialized.', true);
             return;
         }
-        logDebug('Loading client list');
+        logDebug('Loading clients');
         database.ref('clients').once('value', snapshot => {
             const clientList = document.getElementById('clientList');
             clientList.innerHTML = '';
             snapshot.forEach(child => {
                 const li = document.createElement('li');
-                li.textContent = `${child.key} (${child.val().enabled ? 'Enabled' : 'Disabled'}, Last used: ${child.val().lastUsed || 'Never'})`;
+                li.className = 'flex items-center p-2';
+                li.innerHTML = `
+                    <input type="checkbox" name="clientSelect" value="${child.key}" class="mr-2">
+                    ${child.key} (${child.val().enabled ? 'Enabled' : 'Disabled'}, Last used: ${child.val().lastUsed || 'Never'})
+                `;
                 clientList.appendChild(li);
             });
-            logDebug('Client list loaded');
+            logDebug('Clients loaded');
+            showFeedback('clientFeedback', 'Clients loaded.');
         }).catch(error => {
             logDebug(`Load clients failed: ${error.message}`);
-            alert(`Failed to load clients: ${error.message}`);
+            showFeedback('clientFeedback', `Failed: ${error.message}`, true);
         });
     }
 
-    // Load logs
+    // Load Logs
     window.refreshLogs = function() {
         loadLogs();
     };
 
-    function loadLogs() {
+    function loadLogs(filter = '') {
         if (!database) {
-            logDebug('Database not initialized.');
-            alert('Database not initialized.');
+            showFeedback('logFeedback', 'Database not initialized.', true);
             return;
         }
         logDebug('Loading logs');
+        showFeedback('logFeedback', 'Loading...');
         database.ref('logs').limitToLast(50).once('value', snapshot => {
             const logList = document.getElementById('logList');
             logList.innerHTML = '';
             snapshot.forEach(child => {
-                const log = document.createElement('div');
-                log.textContent = `${child.val().clientId}: ${child.val().term} (${child.val().timestamp})`;
-                logList.appendChild(log);
+                const log = child.val();
+                if (filter && !log.clientId.includes(filter) && !log.term.includes(filter)) return;
+                const div = document.createElement('div');
+                div.className = 'p-2';
+                div.textContent = `${log.clientId}: ${log.term} (${log.timestamp})`;
+                logList.appendChild(div);
             });
             logDebug('Logs loaded');
+            showFeedback('logFeedback', 'Logs loaded.');
         }).catch(error => {
             logDebug(`Load logs failed: ${error.message}`);
-            alert(`Failed to load logs: ${error.message}`);
+            showFeedback('logFeedback', `Failed: ${error.message}`, true);
         });
     }
 
-    // Export logs
+    // Export Logs
     window.exportLogs = function() {
         if (!database) {
-            logDebug('Database not initialized.');
-            alert('Database not initialized.');
+            showFeedback('logFeedback', 'Database not initialized.', true);
             return;
         }
         logDebug('Exporting logs');
+        showFeedback('logFeedback', 'Exporting...');
         database.ref('logs').once('value', snapshot => {
             const logs = [];
             snapshot.forEach(child => {
@@ -303,7 +347,7 @@
             });
             if (logs.length === 0) {
                 logDebug('No logs to export');
-                alert('No logs available.');
+                showFeedback('logFeedback', 'No logs available.', true);
                 return;
             }
             const logText = logs.join('\n');
@@ -315,14 +359,59 @@
             a.click();
             URL.revokeObjectURL(url);
             logDebug('Logs exported');
-            alert('Logs exported!');
+            showFeedback('logFeedback', 'Logs exported!');
         }).catch(error => {
-            logDebug(`Export logs failed: ${error.message}`);
-            alert(`Failed to export logs: ${error.message}`);
+            logDebug(`Export failed: ${error.message}`);
+            showFeedback('logFeedback', `Failed: ${error.message}`, true);
         });
     };
 
-    // Initial load
+    // Load Stats
+    window.loadStats = function() {
+        if (!database) {
+            showFeedback('statsFeedback', 'Database not initialized.', true);
+            return;
+        }
+        logDebug('Loading stats');
+        showFeedback('statsFeedback', 'Loading...');
+        database.ref('logs').once('value', snapshot => {
+            const stats = {};
+            snapshot.forEach(child => {
+                const term = child.val().term;
+                stats[term] = (stats[term] || 0) + 1;
+            });
+            const statsList = document.getElementById('statsList');
+            statsList.innerHTML = '';
+            Object.entries(stats).sort((a, b) => b[1] - a[1]).forEach(([term, count]) => {
+                const div = document.createElement('div');
+                div.className = 'p-2';
+                div.textContent = `${term}: ${count} uses`;
+                statsList.appendChild(div);
+            });
+            logDebug('Stats loaded');
+            showFeedback('statsFeedback', 'Stats loaded.');
+        }).catch(error => {
+            logDebug(`Load stats failed: ${error.message}`);
+            showFeedback('statsFeedback', `Failed: ${error.message}`, true);
+        });
+    };
+
+    // Real-time Log Search
+    document.getElementById('logSearch').addEventListener('input', (e) => {
+        loadLogs(e.target.value.trim());
+    });
+
+    // Real-time Client ID Validation
+    document.getElementById('clientId').addEventListener('input', (e) => {
+        const clientId = e.target.value.trim();
+        if (clientId && !isValidClientId(clientId)) {
+            showFeedback('clientFeedback', 'ID must be 3-20 alphanumeric characters.', true);
+        } else {
+            showFeedback('clientFeedback', '');
+        }
+    });
+
+    // Initial Load
     window.addEventListener('load', () => {
         logDebug('Window loaded, initializing');
         loadClientIds();
